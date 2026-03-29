@@ -8,7 +8,7 @@
 PRODUCT_NAME = rise
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.example.rise
+PRODUCT_BUNDLE_IDENTIFIER = com.dbosk.rise
 
 // The copyright displayed in application information
 PRODUCT_COPYRIGHT = Copyright © 2026 com.example. All rights reserved.
