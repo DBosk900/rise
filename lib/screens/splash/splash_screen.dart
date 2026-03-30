@@ -18,35 +18,68 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
+    debugPrint('SplashScreen: initState');
     _navigate();
   }
 
   Future<void> _navigate() async {
-    await Future.delayed(const Duration(milliseconds: 2200));
-    if (!mounted) return;
+    debugPrint('SplashScreen: waiting for auth...');
 
     final auth = context.read<AuthProvider>();
+
+    // Attendi che l'auth esca dallo stato loading, con timeout di 5 secondi
+    const maxAuthWait = Duration(seconds: 5);
+    const tick = Duration(milliseconds: 100);
+    var waited = Duration.zero;
+
+    while (auth.isLoading && waited < maxAuthWait) {
+      await Future.delayed(tick);
+      waited += tick;
+      if (!mounted) return;
+    }
+
+    debugPrint('SplashScreen: auth resolved after ${waited.inMilliseconds}ms, status=${auth.status}');
+
+    // Garantisce almeno 2 secondi di splash visibile
+    final minSplash = const Duration(seconds: 2) - waited;
+    if (minSplash > Duration.zero) {
+      await Future.delayed(minSplash);
+    }
+
+    if (!mounted) return;
+
+    // Hard fallback: se ancora in loading (non dovrebbe mai accadere), vai a onboarding
+    if (auth.isLoading) {
+      debugPrint('SplashScreen: still loading after timeout — going to onboarding');
+      context.go('/onboarding');
+      return;
+    }
+
     final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
     final onboardingDone = prefs.getBool('onboarding_done') ?? false;
 
     if (auth.isAuthenticated) {
+      debugPrint('SplashScreen: user authenticated — going to home');
       context.go('/home');
     } else if (!onboardingDone) {
+      debugPrint('SplashScreen: first launch — going to onboarding');
       context.go('/onboarding');
     } else {
+      debugPrint('SplashScreen: not authenticated — going to login');
       context.go('/auth/login');
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    debugPrint('SplashScreen: build');
     return Scaffold(
       backgroundColor: AppColors.backgroundDark,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Logo RISE
             ShaderMask(
               shaderCallback: (bounds) =>
                   AppColors.primaryGradient.createShader(bounds),

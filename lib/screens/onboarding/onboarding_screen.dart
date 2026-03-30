@@ -58,6 +58,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    debugPrint('OnboardingScreen: initState');
+  }
+
+  @override
   void dispose() {
     _controller.dispose();
     super.dispose();

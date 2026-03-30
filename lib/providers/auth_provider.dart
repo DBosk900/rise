@@ -24,19 +24,53 @@ class AuthProvider extends ChangeNotifier {
   Map<String, dynamic>? get utenteData => _utenteData;
   String? get error => _error;
   bool get isAuthenticated => _status == AuthStatus.authenticated;
+  bool get isLoading => _status == AuthStatus.loading;
 
   AuthProvider() {
-    _authService.authStateChanges.listen(_onAuthChanged);
+    _init();
+  }
+
+  void _init() {
+    debugPrint('AuthProvider: init');
+
+    // Timeout di sicurezza: dopo 5s forza unauthenticated se ancora in loading
+    Future.delayed(const Duration(seconds: 5), () {
+      if (_status == AuthStatus.loading) {
+        debugPrint('AuthProvider: timeout - forcing unauthenticated');
+        _status = AuthStatus.unauthenticated;
+        notifyListeners();
+      }
+    });
+
+    try {
+      _authService.authStateChanges.listen(
+        _onAuthChanged,
+        onError: (e) {
+          debugPrint('AuthProvider: authStateChanges error: $e');
+          _status = AuthStatus.unauthenticated;
+          notifyListeners();
+        },
+      );
+    } catch (e) {
+      debugPrint('AuthProvider: failed to start auth listener: $e');
+      _status = AuthStatus.unauthenticated;
+      notifyListeners();
+    }
   }
 
   Future<void> _onAuthChanged(User? user) async {
+    debugPrint('AuthProvider: auth changed, user=${user?.uid}');
     _user = user;
     if (user == null) {
       _status = AuthStatus.unauthenticated;
       _isArtista = false;
       _artista = null;
       _utenteData = null;
-    } else {
+      notifyListeners();
+      return;
+    }
+
+    try {
       _isArtista = await _authService.isArtista(user.uid);
       if (_isArtista) {
         final doc = await _db.collection('artisti').doc(user.uid).get();
@@ -44,9 +78,13 @@ class AuthProvider extends ChangeNotifier {
       } else {
         _utenteData = await _authService.getUtenteData(user.uid);
       }
-      _status = AuthStatus.authenticated;
+    } catch (e) {
+      debugPrint('AuthProvider: error loading user data: $e');
     }
+
+    _status = AuthStatus.authenticated;
     notifyListeners();
+    debugPrint('AuthProvider: status = authenticated');
   }
 
   Future<bool> signIn(String email, String password) async {

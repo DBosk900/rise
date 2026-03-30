@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter/widgets.dart';
 import '../providers/auth_provider.dart';
 import '../screens/splash/splash_screen.dart';
 import '../screens/onboarding/onboarding_screen.dart';
@@ -17,16 +17,33 @@ import '../screens/classifica/classifica_screen.dart';
 
 class AppRouter {
   static GoRouter router(BuildContext context) {
+    // Cattura il provider una volta dal contesto noto — evita di usare
+    // ctx.read<>() nel redirect callback dove il contesto è incerto
+    final authProvider = context.read<AuthProvider>();
+
     return GoRouter(
       initialLocation: '/splash',
+      // Ri-valuta i redirect ogni volta che AuthProvider notifica cambiamenti
+      refreshListenable: authProvider,
       redirect: (ctx, state) {
-        final auth = ctx.read<AuthProvider>();
-        final loggedIn = auth.isAuthenticated;
-        final onAuthPage = state.matchedLocation.startsWith('/auth') ||
-            state.matchedLocation == '/onboarding';
-        final onSplash = state.matchedLocation == '/splash';
+        final status = authProvider.status;
+        final location = state.matchedLocation;
 
-        if (onSplash) return null;
+        // Non interferire con splash e onboarding
+        final onSplash = location == '/splash';
+        final onOnboarding = location == '/onboarding';
+        final onAuthPage = location.startsWith('/auth');
+
+        // Durante il loading non fare redirect — la splash gestisce la navigazione
+        if (status == AuthStatus.loading) {
+          if (onSplash) return null;
+          // Se non siamo sulla splash e l'auth è in loading, aspettiamo sulla splash
+          return '/splash';
+        }
+
+        final loggedIn = authProvider.isAuthenticated;
+
+        if (onSplash || onOnboarding) return null;
         if (!loggedIn && !onAuthPage) return '/auth/login';
         if (loggedIn && onAuthPage) return '/home';
         return null;

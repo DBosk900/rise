@@ -27,6 +27,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    debugPrint('HomeScreen: initState');
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<GaraProvider>().caricaGaraAttiva();
       final uid = context.read<AuthProvider>().user?.uid;
