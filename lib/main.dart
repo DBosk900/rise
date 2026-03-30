@@ -10,6 +10,7 @@ import 'providers/voti_provider.dart';
 import 'providers/theme_provider.dart';
 import 'providers/player_provider.dart';
 import 'screens/splash/splash_screen.dart';
+import 'services/notifica_service.dart';
 import 'theme/app_theme.dart';
 
 void main() async {
@@ -40,6 +41,14 @@ void main() async {
     debugPrint('RISE: AdMob ready');
   } catch (e) {
     debugPrint('RISE: AdMob error: $e');
+  }
+
+  // Inizializza notifiche push
+  try {
+    await NotificaService().init();
+    debugPrint('RISE: Notifiche ready');
+  } catch (e) {
+    debugPrint('RISE: Notifiche error: $e');
   }
 
   debugPrint('RISE: runApp');

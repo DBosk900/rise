@@ -4,8 +4,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:provider/provider.dart';
-import 'package:share_plus/share_plus.dart' show Share;
 import '../../models/brano.dart';
+import '../../widgets/share_brano_widget.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/voti_provider.dart';
 import '../../theme/app_theme.dart';
@@ -115,9 +115,7 @@ class _SchermataBranoScreenState extends State<SchermataBranoScreen> {
             actions: [
               IconButton(
                 icon: const Icon(Icons.share_outlined, color: Colors.white),
-                onPressed: () => Share.share(
-                  '🎵 Vota "${brano.titolo}" di ${brano.artistaNome} su RISE!',
-                ),
+                onPressed: () => shareBranoCard(context, brano),
               ),
             ],
             flexibleSpace: FlexibleSpaceBar(

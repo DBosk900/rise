@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Rise</string>
+	<string>RISE</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -59,14 +59,6 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
-	<key>GADApplicationIdentifier</key>
-	<string>ca-app-pub-9263633751167265~4272443229</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>RISE ha bisogno di accedere alla galleria per caricare la cover art del tuo brano</string>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>RISE ha bisogno del microfono per registrare audio durante i live streaming</string>
-	<key>NSCameraUsageDescription</key>
-	<string>RISE ha bisogno della fotocamera per scattare foto per la cover art del tuo brano</string>
 	<key>UISupportedInterfaceOrientations~ipad</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
@@ -74,5 +66,23 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>audio</string>
+		<string>fetch</string>
+		<string>remote-notification</string>
+	</array>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>GADApplicationIdentifier</key>
+	<string>ca-app-pub-9263633751167265~4272443229</string>
+	<key>NSCameraUsageDescription</key>
+	<string>RISE ha bisogno della fotocamera per scattare foto per la cover art del tuo brano</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>RISE ha bisogno di accedere alla galleria per caricare la cover art del tuo brano</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>RISE ha bisogno di salvare immagini nella tua galleria</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>RISE ha bisogno del microfono per registrare audio durante i live streaming</string>
 </dict>
 </plist>
