@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../theme/app_theme.dart';
+import '../home/home_screen.dart';
+import '../artista/dashboard_artista_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class RegistrazioneScreen extends StatefulWidget {
@@ -42,7 +43,13 @@ class _RegistrazioneScreenState extends State<RegistrazioneScreen> {
 
     if (mounted) {
       setState(() => _loading = false);
-      if (ok) context.go(_isArtista ? '/artista/dashboard' : '/home');
+      if (ok) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (_) => _isArtista ? const DashboardArtistaScreen() : const HomeScreen(),
+          ),
+        );
+      }
     }
   }
 
@@ -61,7 +68,7 @@ class _RegistrazioneScreenState extends State<RegistrazioneScreen> {
                 letterSpacing: 2)),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-          onPressed: () => context.go('/auth/login'),
+          onPressed: () => Navigator.of(context).pop(),
         ),
       ),
       body: SingleChildScrollView(
@@ -217,7 +224,7 @@ class _RegistrazioneScreenState extends State<RegistrazioneScreen> {
 
               Center(
                 child: TextButton(
-                  onPressed: () => context.go('/auth/login'),
+                  onPressed: () => Navigator.of(context).pop(),
                   child: Text(
                     'Hai già un account? Accedi',
                     style: GoogleFonts.inter(

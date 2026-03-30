@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../theme/app_theme.dart';
+import '../home/home_screen.dart';
+import 'registrazione_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -42,7 +43,11 @@ class _LoginScreenState extends State<LoginScreen> {
         );
     if (mounted) {
       setState(() => _loading = false);
-      if (ok) context.go('/home');
+      if (ok) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const HomeScreen()),
+        );
+      }
     }
   }
 
@@ -221,7 +226,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           color: AppColors.textSecondary, fontSize: 14),
                     ),
                     GestureDetector(
-                      onTap: () => context.go('/auth/registrazione'),
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const RegistrazioneScreen()),
+                      ),
                       child: Text(
                         'Registrati',
                         style: GoogleFonts.inter(
