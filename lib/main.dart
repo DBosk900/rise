@@ -1,65 +1,50 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
+import 'firebase_options.dart';
 import 'providers/auth_provider.dart';
 import 'providers/gara_provider.dart';
 import 'providers/voti_provider.dart';
 import 'providers/theme_provider.dart';
-import 'router/app_router.dart';
+import 'screens/splash/splash_screen.dart';
 import 'theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  debugPrint('RISE: Starting...');
 
-  debugPrint('Starting app...');
-
-  // Lock to portrait
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
-  ]);
-
-  // Status bar style
-  SystemChrome.setSystemUIOverlayStyle(
-    const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.light,
-    ),
-  );
-
-  // Load .env
-  debugPrint('Loading .env...');
+  // Carica .env
   try {
     await dotenv.load(fileName: '.env');
-    debugPrint('.env loaded successfully');
+    debugPrint('RISE: .env loaded');
   } catch (e) {
-    debugPrint('WARNING: .env load failed: $e');
+    debugPrint('RISE: ENV error: $e');
   }
 
-  // Firebase — legge GoogleService-Info.plist (iOS) / google-services.json (Android)
-  debugPrint('Initializing Firebase...');
+  // Inizializza Firebase
   try {
-    await Firebase.initializeApp();
-    debugPrint('Firebase initialized successfully');
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    debugPrint('RISE: Firebase ready');
   } catch (e) {
-    debugPrint('ERROR: Firebase init failed: $e');
-    // Non bloccare l'avvio — l'app mostra uno stato di errore
+    debugPrint('RISE: Firebase error: $e');
   }
 
-  // AdMob
-  debugPrint('Initializing AdMob...');
+  // Inizializza AdMob
   try {
     await MobileAds.instance.initialize();
-    debugPrint('AdMob initialized successfully');
+    debugPrint('RISE: AdMob ready');
   } catch (e) {
-    debugPrint('WARNING: AdMob init failed: $e');
+    debugPrint('RISE: AdMob error: $e');
   }
 
-  debugPrint('App ready!');
+  debugPrint('RISE: runApp');
 
+  // Nota: il progetto usa il pacchetto "provider", non Riverpod.
+  // ProviderScope è Riverpod — qui si usa MultiProvider.
   runApp(
     MultiProvider(
       providers: [
@@ -73,27 +58,23 @@ void main() async {
   );
 }
 
-class RiseApp extends StatefulWidget {
+class RiseApp extends StatelessWidget {
   const RiseApp({super.key});
 
   @override
-  State<RiseApp> createState() => _RiseAppState();
-}
-
-class _RiseAppState extends State<RiseApp> {
-  late final _router = AppRouter.router(context);
-
-  @override
   Widget build(BuildContext context) {
-    final theme = context.watch<ThemeProvider>();
-
-    return MaterialApp.router(
+    debugPrint('RISE: RiseApp.build');
+    return MaterialApp(
       title: 'RISE',
       debugShowCheckedModeBanner: false,
-      themeMode: theme.mode,
-      theme: AppTheme.lightTheme,
+      // Tema dark immediato come fallback — nessuna dipendenza da ThemeProvider
+      // per il primo frame, evita il flash bianco/grigio
+      theme: AppTheme.darkTheme,
       darkTheme: AppTheme.darkTheme,
-      routerConfig: _router,
+      themeMode: ThemeMode.dark,
+      // home diretto senza go_router per il debug — Navigator.pushReplacement
+      // gestisce la navigazione dalla splash in poi
+      home: const SplashScreen(),
     );
   }
 }
