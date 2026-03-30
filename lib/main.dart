@@ -64,16 +64,13 @@ class RiseApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     debugPrint('RISE: RiseApp.build');
+    final themeMode = context.watch<ThemeProvider>().mode;
     return MaterialApp(
       title: 'RISE',
       debugShowCheckedModeBanner: false,
-      // Tema dark immediato come fallback — nessuna dipendenza da ThemeProvider
-      // per il primo frame, evita il flash bianco/grigio
-      theme: AppTheme.darkTheme,
+      theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.dark,
-      // home diretto senza go_router per il debug — Navigator.pushReplacement
-      // gestisce la navigazione dalla splash in poi
+      themeMode: themeMode,
       home: const SplashScreen(),
     );
   }

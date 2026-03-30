@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../models/brano.dart';
 import '../../models/classifica.dart';
 import '../../services/gara_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/classifica_row.dart';
+import '../gare/schermata_brano_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class ClassificaScreen extends StatefulWidget {
@@ -73,7 +73,7 @@ class _ClassificaScreenState extends State<ClassificaScreen>
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-          onPressed: () => context.go('/home'),
+          onPressed: () => Navigator.of(context).pop(),
         ),
         bottom: _tabController != null && _generi.length > 1
             ? TabBar(
@@ -181,7 +181,11 @@ class _ClassificaList extends StatelessWidget {
           itemBuilder: (ctx, i) {
             return ClassificaRow(
               riga: classifica.righe[i],
-              onTap: () => ctx.go('/brano/${classifica.righe[i].brano.id}'),
+              onTap: () => Navigator.of(ctx).push(
+                MaterialPageRoute(
+                  builder: (_) => SchermataBranoScreen(branoId: classifica.righe[i].brano.id),
+                ),
+              ),
             ).animate().fadeIn(
                   delay: Duration(milliseconds: 50 * i),
                   duration: 300.ms,

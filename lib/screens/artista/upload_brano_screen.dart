@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
@@ -9,6 +8,7 @@ import '../../providers/gara_provider.dart';
 import '../../services/storage_service.dart';
 import '../../services/gara_service.dart';
 import '../../theme/app_theme.dart';
+import 'dashboard_artista_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 const _generi = [
@@ -138,20 +138,20 @@ class _UploadBranoScreenState extends State<UploadBranoScreen> {
         genere: _genere!,
       );
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('🎉 Brano iscritto con successo!'),
-            backgroundColor: AppColors.rankUp,
-          ),
-        );
-        context.go('/artista/dashboard');
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('🎉 Brano iscritto con successo!'),
+          backgroundColor: AppColors.rankUp,
+        ),
+      );
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const DashboardArtistaScreen()),
+      );
     } catch (e) {
-      if (mounted) {
-        setState(() => _uploading = false);
-        _showError('Errore: $e');
-      }
+      if (mounted) _showError('Errore: $e');
+    } finally {
+      if (mounted) setState(() => _uploading = false);
     }
   }
 
@@ -164,8 +164,11 @@ class _UploadBranoScreenState extends State<UploadBranoScreen> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
           onPressed: () {
-            if (_step > 0) setState(() => _step--);
-            else context.go('/artista/dashboard');
+            if (_step > 0) {
+              setState(() => _step--);
+            } else {
+              Navigator.of(context).pop();
+            }
           },
         ),
       ),

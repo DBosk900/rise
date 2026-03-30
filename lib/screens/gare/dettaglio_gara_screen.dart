@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../models/brano.dart';
 import '../../models/gara.dart';
@@ -10,6 +9,7 @@ import '../../services/gara_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/brano_card.dart';
 import '../../widgets/countdown_timer.dart';
+import 'schermata_brano_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class DettaglioGaraScreen extends StatefulWidget {
@@ -79,7 +79,7 @@ class _DettaglioGaraScreenState extends State<DettaglioGaraScreen>
             backgroundColor: AppColors.backgroundDark,
             leading: IconButton(
               icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-              onPressed: () => context.pop(),
+              onPressed: () => Navigator.of(context).pop(),
             ),
             flexibleSpace: FlexibleSpaceBar(
               background: _buildHeader(),
@@ -212,7 +212,11 @@ class _BraniList extends StatelessWidget {
               brano: brani[i],
               posizione: i + 1,
               haVotiDisponibili: voti.stato?.haVoti ?? false,
-              onTap: () => ctx.go('/brano/${brani[i].id}'),
+              onTap: () => Navigator.of(ctx).push(
+                MaterialPageRoute(
+                  builder: (_) => SchermataBranoScreen(branoId: brani[i].id),
+                ),
+              ),
               onVota: auth.user == null
                   ? null
                   : () async {

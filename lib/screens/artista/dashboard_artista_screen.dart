@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../models/artista.dart';
 import '../../models/brano.dart';
@@ -9,6 +8,8 @@ import '../../providers/gara_provider.dart';
 import '../../services/pagamento_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/badge_vincitore.dart';
+import '../home/home_screen.dart';
+import 'upload_brano_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class DashboardArtistaScreen extends StatefulWidget {
@@ -54,10 +55,10 @@ class _DashboardArtistaScreenState extends State<DashboardArtistaScreen> {
 
   Future<void> _acquistaAbbonamento() async {
     setState(() => _acquistandoAbbonamento = true);
-    await _pagamento.initialize();
-    final ok = await _pagamento.acquistaAbbonamentoArtista();
-    if (mounted) {
-      setState(() => _acquistandoAbbonamento = false);
+    try {
+      await _pagamento.initialize();
+      final ok = await _pagamento.acquistaAbbonamentoArtista();
+      if (!mounted) return;
       if (ok) {
         await context.read<AuthProvider>().refreshArtista();
         ScaffoldMessenger.of(context).showSnackBar(
@@ -72,6 +73,8 @@ class _DashboardArtistaScreenState extends State<DashboardArtistaScreen> {
               backgroundColor: AppColors.cardDark),
         );
       }
+    } finally {
+      if (mounted) setState(() => _acquistandoAbbonamento = false);
     }
   }
 
@@ -94,7 +97,15 @@ class _DashboardArtistaScreenState extends State<DashboardArtistaScreen> {
         title: const Text('Dashboard Artista'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-          onPressed: () => context.go('/home'),
+          onPressed: () {
+            if (Navigator.of(context).canPop()) {
+              Navigator.of(context).pop();
+            } else {
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (_) => const HomeScreen()),
+              );
+            }
+          },
         ),
       ),
       body: SingleChildScrollView(
@@ -139,7 +150,10 @@ class _DashboardArtistaScreenState extends State<DashboardArtistaScreen> {
                 width: double.infinity,
                 height: 54,
                 child: GestureDetector(
-                  onTap: () => context.go('/artista/upload'),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                        builder: (_) => const UploadBranoScreen()),
+                  ),
                   child: Container(
                     decoration: BoxDecoration(
                       gradient: AppColors.primaryGradient,

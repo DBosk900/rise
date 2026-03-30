@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
@@ -37,17 +38,85 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
-    final ok = await context.read<AuthProvider>().signIn(
-          _emailCtrl.text.trim(),
-          _passCtrl.text,
-        );
-    if (mounted) {
-      setState(() => _loading = false);
+    try {
+      final ok = await context.read<AuthProvider>().signIn(
+            _emailCtrl.text.trim(),
+            _passCtrl.text,
+          );
+      if (!mounted) return;
       if (ok) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('✅ Accesso effettuato!'),
+            backgroundColor: AppColors.rankUp,
+          ),
+        );
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => const HomeScreen()),
         );
       }
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _resetPassword() async {
+    final emailReset = _emailCtrl.text.trim().isNotEmpty
+        ? _emailCtrl.text.trim()
+        : null;
+
+    final ctrl = TextEditingController(text: emailReset);
+    final email = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.cardDark,
+        title: Text(
+          'Reset password',
+          style: GoogleFonts.oswald(color: Colors.white, fontSize: 18),
+        ),
+        content: TextField(
+          controller: ctrl,
+          keyboardType: TextInputType.emailAddress,
+          style: const TextStyle(color: Colors.white),
+          decoration: const InputDecoration(
+            labelText: 'Email',
+            prefixIcon: Icon(Icons.email_outlined, color: AppColors.textDim),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text('Annulla',
+                style: GoogleFonts.inter(color: AppColors.textSecondary)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(ctrl.text.trim()),
+            child: Text('Invia',
+                style: GoogleFonts.inter(color: AppColors.primary)),
+          ),
+        ],
+      ),
+    );
+
+    if (email == null || email.isEmpty || !mounted) return;
+
+    try {
+      await fb_auth.FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('✅ Email inviata! Controlla la tua casella'),
+          backgroundColor: AppColors.rankUp,
+        ),
+      );
+    } on fb_auth.FirebaseAuthException catch (e) {
+      if (!mounted) return;
+      final msg = e.code == 'user-not-found'
+          ? 'Nessun account con questa email'
+          : e.message ?? 'Errore durante il reset';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(msg), backgroundColor: AppColors.primary),
+      );
     }
   }
 
@@ -173,9 +242,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
-                    onPressed: () {
-                      // TODO: forgot password flow
-                    },
+                    onPressed: _resetPassword,
                     child: Text(
                       'Password dimenticata?',
                       style: GoogleFonts.inter(
@@ -227,7 +294,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     GestureDetector(
                       onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const RegistrazioneScreen()),
+                        MaterialPageRoute(
+                            builder: (_) => const RegistrazioneScreen()),
                       ),
                       child: Text(
                         'Registrati',

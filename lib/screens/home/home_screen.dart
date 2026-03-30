@@ -1,16 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/gara_provider.dart';
 import '../../models/gara.dart';
+import '../../providers/theme_provider.dart';
 import '../../providers/voti_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/countdown_timer.dart';
 import '../../widgets/montepremi_counter.dart';
 import '../../widgets/brano_card.dart';
 import '../../widgets/admob_banner.dart';
+import '../artista/dashboard_artista_screen.dart';
+import '../auth/login_screen.dart';
+import '../classifica/classifica_screen.dart';
+import '../gare/dettaglio_gara_screen.dart';
+import '../gare/schermata_brano_screen.dart';
+import '../voti/acquisto_voti_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -44,6 +51,129 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
+  void _showSettings() {
+    final theme = context.read<ThemeProvider>();
+    final auth = context.read<AuthProvider>();
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.cardDark,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setModalState) {
+          final isDark = theme.isDark;
+          return SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Impostazioni',
+                      style: GoogleFonts.oswald(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                          letterSpacing: 2)),
+                  const SizedBox(height: 24),
+
+                  // Tema
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.dark_mode_outlined,
+                              color: AppColors.textSecondary, size: 20),
+                          const SizedBox(width: 12),
+                          Text('Tema scuro',
+                              style: GoogleFonts.inter(
+                                  color: Colors.white, fontSize: 15)),
+                        ],
+                      ),
+                      Switch(
+                        value: isDark,
+                        activeThumbColor: AppColors.primary,
+                        onChanged: (_) async {
+                          await theme.toggle();
+                          setModalState(() {});
+                        },
+                      ),
+                    ],
+                  ),
+
+                  const Divider(color: AppColors.backgroundDark, height: 24),
+
+                  // Versione
+                  Row(
+                    children: [
+                      const Icon(Icons.info_outline,
+                          color: AppColors.textSecondary, size: 20),
+                      const SizedBox(width: 12),
+                      Text('Versione 1.0.0',
+                          style: GoogleFonts.inter(
+                              color: AppColors.textSecondary, fontSize: 15)),
+                    ],
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Privacy policy
+                  GestureDetector(
+                    onTap: () async {
+                      final uri = Uri.parse('https://rise-app.it/privacy');
+                      if (await canLaunchUrl(uri)) launchUrl(uri);
+                    },
+                    child: Row(
+                      children: [
+                        const Icon(Icons.privacy_tip_outlined,
+                            color: AppColors.textSecondary, size: 20),
+                        const SizedBox(width: 12),
+                        Text('Privacy Policy',
+                            style: GoogleFonts.inter(
+                                color: AppColors.primary, fontSize: 15)),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Logout
+                  SizedBox(
+                    width: double.infinity,
+                    child: TextButton(
+                      onPressed: () async {
+                        Navigator.of(ctx).pop();
+                        await auth.signOut();
+                        if (!mounted) return;
+                        Navigator.of(context).pushAndRemoveUntil(
+                          MaterialPageRoute(
+                              builder: (_) => const LoginScreen()),
+                          (route) => false,
+                        );
+                      },
+                      child: Text(
+                        'ESCI',
+                        style: GoogleFonts.oswald(
+                          color: AppColors.primary,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 2,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
@@ -56,9 +186,9 @@ class _HomeScreenState extends State<HomeScreen> {
           ? _buildHome(context, gara, voti, auth)
           : _navIndex == 1
               ? _buildGare(context)
-              : _navIndex == 2
-                  ? _buildClassifica(context)
-                  : _buildProfilo(context, auth),
+              : _navIndex == 3
+                  ? _buildProfilo(context, auth)
+                  : const SizedBox.shrink(),
       bottomNavigationBar: _buildNavBar(),
     );
   }
@@ -86,19 +216,24 @@ class _HomeScreenState extends State<HomeScreen> {
             if (auth.isAuthenticated) ...[
               _VotiIndicator(
                 votiRimasti: voti.stato?.votiGratuiRimasti ?? 0,
-                onTap: () => context.go('/voti/acquisto'),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const AcquistoVotiScreen()),
+                ),
               ),
               const SizedBox(width: 8),
             ],
             if (auth.isArtista)
               IconButton(
                 icon: const Icon(Icons.dashboard_outlined, color: Colors.white),
-                onPressed: () => context.go('/artista/dashboard'),
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                      builder: (_) => const DashboardArtistaScreen()),
+                ),
               ),
             IconButton(
               icon: const Icon(Icons.settings_outlined,
                   color: AppColors.textSecondary),
-              onPressed: () {},
+              onPressed: _showSettings,
             ),
           ],
         ),
@@ -153,7 +288,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   brano: brano,
                   posizione: i + 1,
                   haVotiDisponibili: voti.stato?.haVoti ?? false,
-                  onTap: () => context.go('/brano/${brano.id}'),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => SchermataBranoScreen(branoId: brano.id),
+                    ),
+                  ),
                   onVota: () => _vota(ctx, brano.id,
                       gara.garaAttiva!.id, voti, auth),
                 ).animate().fadeIn(
@@ -182,8 +321,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                   TextButton(
-                    onPressed: () =>
-                        context.go('/gara/${gara.garaAttiva!.id}'),
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => DettaglioGaraScreen(
+                            garaId: gara.garaAttiva!.id),
+                      ),
+                    ),
                     child: Text('Vedi tutti →',
                         style: GoogleFonts.inter(
                             color: AppColors.primary, fontSize: 13)),
@@ -202,7 +345,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   brano: brano,
                   posizione: gara.brani.indexOf(brano) + 1,
                   haVotiDisponibili: voti.stato?.haVoti ?? false,
-                  onTap: () => ctx.go('/brano/${brano.id}'),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          SchermataBranoScreen(branoId: brano.id),
+                    ),
+                  ),
                   onVota: () => _vota(ctx, brano.id,
                       gara.garaAttiva!.id, voti, auth),
                 );
@@ -228,7 +376,9 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _vota(BuildContext ctx, String branoId, String garaId,
       VotiProvider voti, AuthProvider auth) async {
     if (auth.user == null) {
-      ctx.go('/auth/login');
+      Navigator.of(ctx).push(
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+      );
       return;
     }
     final result = await voti.vota(
@@ -257,22 +407,23 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildGare(BuildContext context) {
     final gara = context.watch<GaraProvider>();
-    if (gara.garaAttiva == null) return const Center(
-      child: Text('Nessuna gara attiva', style: TextStyle(color: AppColors.textSecondary)),
-    );
+    if (gara.garaAttiva == null) {
+      return const Center(
+        child: Text('Nessuna gara attiva',
+            style: TextStyle(color: AppColors.textSecondary)),
+      );
+    }
     return Center(
       child: ElevatedButton(
-        onPressed: () => context.go('/gara/${gara.garaAttiva!.id}'),
+        onPressed: () => Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) =>
+                DettaglioGaraScreen(garaId: gara.garaAttiva!.id),
+          ),
+        ),
         child: const Text('Vedi gara attiva'),
       ),
     );
-  }
-
-  Widget _buildClassifica(BuildContext context) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.go('/classifica');
-    });
-    return const SizedBox.shrink();
   }
 
   Widget _buildProfilo(BuildContext context, AuthProvider auth) {
@@ -288,14 +439,21 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 24),
           if (auth.isArtista)
             ElevatedButton(
-              onPressed: () => context.go('/artista/dashboard'),
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                    builder: (_) => const DashboardArtistaScreen()),
+              ),
               child: const Text('Dashboard Artista'),
             ),
           const SizedBox(height: 12),
           TextButton(
             onPressed: () async {
               await auth.signOut();
-              if (mounted) context.go('/auth/login');
+              if (!mounted) return;
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (_) => const LoginScreen()),
+                (route) => false,
+              );
             },
             child: const Text('Esci',
                 style: TextStyle(color: AppColors.primary)),
@@ -310,7 +468,9 @@ class _HomeScreenState extends State<HomeScreen> {
       currentIndex: _navIndex,
       onTap: (i) {
         if (i == 2) {
-          context.go('/classifica');
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const ClassificaScreen()),
+          );
           return;
         }
         setState(() => _navIndex = i);

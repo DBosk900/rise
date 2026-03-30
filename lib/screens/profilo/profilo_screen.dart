@@ -2,12 +2,12 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:go_router/go_router.dart';
 import '../../models/artista.dart';
 import '../../models/brano.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/badge_vincitore.dart';
 import '../../widgets/brano_card.dart';
+import '../gare/schermata_brano_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class ProfiloScreen extends StatefulWidget {
@@ -85,7 +85,7 @@ class _ProfiloScreenState extends State<ProfiloScreen> {
             backgroundColor: AppColors.backgroundDark,
             leading: IconButton(
               icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-              onPressed: () => context.pop(),
+              onPressed: () => Navigator.of(context).pop(),
             ),
             flexibleSpace: FlexibleSpaceBar(
               background: Stack(
@@ -202,7 +202,11 @@ class _ProfiloScreenState extends State<ProfiloScreen> {
                 (ctx, i) => BranoCard(
                   brano: _brani[i],
                   posizione: _brani[i].posizioneAttuale,
-                  onTap: () => ctx.go('/brano/${_brani[i].id}'),
+                  onTap: () => Navigator.of(ctx).push(
+                    MaterialPageRoute(
+                      builder: (_) => SchermataBranoScreen(branoId: _brani[i].id),
+                    ),
+                  ),
                 ).animate().fadeIn(
                       delay: Duration(milliseconds: 60 * i),
                       duration: 300.ms,

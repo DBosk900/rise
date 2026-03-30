@@ -34,22 +34,33 @@ class _RegistrazioneScreenState extends State<RegistrazioneScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
 
-    final ok = await context.read<AuthProvider>().register(
-          email: _emailCtrl.text.trim(),
-          password: _passCtrl.text,
-          nome: _nomeCtrl.text.trim(),
-          isArtista: _isArtista,
-        );
+    try {
+      final ok = await context.read<AuthProvider>().register(
+            email: _emailCtrl.text.trim(),
+            password: _passCtrl.text,
+            nome: _nomeCtrl.text.trim(),
+            isArtista: _isArtista,
+          );
 
-    if (mounted) {
-      setState(() => _loading = false);
+      if (!mounted) return;
+
       if (ok) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ Account creato con successo!'),
+            backgroundColor: AppColors.rankUp,
+          ),
+        );
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
-            builder: (_) => _isArtista ? const DashboardArtistaScreen() : const HomeScreen(),
+            builder: (_) => _isArtista
+                ? const DashboardArtistaScreen()
+                : const HomeScreen(),
           ),
         );
       }
+    } finally {
+      if (mounted) setState(() => _loading = false);
     }
   }
 

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:go_router/go_router.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart' show Share;
@@ -12,6 +11,9 @@ import '../../providers/voti_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/admob_banner.dart';
 import '../../widgets/vota_button.dart';
+import '../../screens/auth/login_screen.dart';
+import '../../screens/profilo/profilo_screen.dart';
+import '../../screens/voti/acquisto_voti_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class SchermataBranoScreen extends StatefulWidget {
@@ -108,7 +110,7 @@ class _SchermataBranoScreenState extends State<SchermataBranoScreen> {
             backgroundColor: AppColors.backgroundDark,
             leading: IconButton(
               icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-              onPressed: () => context.pop(),
+              onPressed: () => Navigator.of(context).pop(),
             ),
             actions: [
               IconButton(
@@ -154,7 +156,11 @@ class _SchermataBranoScreenState extends State<SchermataBranoScreen> {
                   const SizedBox(height: 4),
 
                   GestureDetector(
-                    onTap: () => context.go('/profilo/${brano.artistaId}'),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => ProfiloScreen(artistaId: brano.artistaId),
+                      ),
+                    ),
                     child: Text(
                       brano.artistaNome,
                       style: GoogleFonts.inter(
@@ -197,7 +203,10 @@ class _SchermataBranoScreenState extends State<SchermataBranoScreen> {
                       haVotiDisponibili: voti.stato?.haVoti ?? false,
                       loading: _votaLoading,
                       onTap: auth.user == null
-                          ? () => context.go('/auth/login')
+                          ? () => Navigator.of(context).push(
+                                MaterialPageRoute(
+                                    builder: (_) => const LoginScreen()),
+                              )
                           : () => _vota(auth, voti),
                     ),
                   ).animate().scale(
@@ -210,7 +219,10 @@ class _SchermataBranoScreenState extends State<SchermataBranoScreen> {
                     const SizedBox(height: 12),
                     Center(
                       child: TextButton(
-                        onPressed: () => context.go('/voti/acquisto'),
+                        onPressed: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                              builder: (_) => const AcquistoVotiScreen()),
+                        ),
                         child: Text(
                           'Acquista voti extra →',
                           style: GoogleFonts.inter(
