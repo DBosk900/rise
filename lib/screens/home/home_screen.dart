@@ -1,24 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/admin_service.dart';
 import '../../providers/gara_provider.dart';
 import '../../models/gara.dart';
-import '../../providers/theme_provider.dart';
 import '../../providers/voti_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/countdown_timer.dart';
 import '../../widgets/montepremi_counter.dart';
 import '../../widgets/brano_card.dart';
 import '../../widgets/admob_banner.dart';
+import '../../widgets/mini_player.dart';
 import '../artista/dashboard_artista_screen.dart';
 import '../auth/login_screen.dart';
 import '../classifica/classifica_screen.dart';
 import '../gare/dettaglio_gara_screen.dart';
 import '../gare/schermata_brano_screen.dart';
 import '../voti/acquisto_voti_screen.dart';
+import '../ricerca/ricerca_screen.dart';
+import '../hall_of_fame/hall_of_fame_screen.dart';
+import '../impostazioni/impostazioni_screen.dart';
+import '../referral/referral_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -53,169 +56,34 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showSettings() {
-    final theme = context.read<ThemeProvider>();
-    final auth = context.read<AuthProvider>();
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.cardDark,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setModalState) {
-          final isDark = theme.isDark;
-          return SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Impostazioni',
-                      style: GoogleFonts.oswald(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                          letterSpacing: 2)),
-                  const SizedBox(height: 24),
-
-                  // Tema
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(Icons.dark_mode_outlined,
-                              color: AppColors.textSecondary, size: 20),
-                          const SizedBox(width: 12),
-                          Text('Tema scuro',
-                              style: GoogleFonts.inter(
-                                  color: Colors.white, fontSize: 15)),
-                        ],
-                      ),
-                      Switch(
-                        value: isDark,
-                        activeThumbColor: AppColors.primary,
-                        onChanged: (_) async {
-                          await theme.toggle();
-                          setModalState(() {});
-                        },
-                      ),
-                    ],
-                  ),
-
-                  const Divider(color: AppColors.backgroundDark, height: 24),
-
-                  // Versione
-                  Row(
-                    children: [
-                      const Icon(Icons.info_outline,
-                          color: AppColors.textSecondary, size: 20),
-                      const SizedBox(width: 12),
-                      Text('Versione 1.0.0',
-                          style: GoogleFonts.inter(
-                              color: AppColors.textSecondary, fontSize: 15)),
-                    ],
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Privacy policy
-                  GestureDetector(
-                    onTap: () async {
-                      final uri = Uri.parse('https://rise-app.it/privacy');
-                      if (await canLaunchUrl(uri)) launchUrl(uri);
-                    },
-                    child: Row(
-                      children: [
-                        const Icon(Icons.privacy_tip_outlined,
-                            color: AppColors.textSecondary, size: 20),
-                        const SizedBox(width: 12),
-                        Text('Privacy Policy',
-                            style: GoogleFonts.inter(
-                                color: AppColors.primary, fontSize: 15)),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // DEV: Seed dati test
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      icon: const Icon(Icons.science_outlined,
-                          color: AppColors.textSecondary, size: 16),
-                      label: Text('Seed Gara Test',
-                          style: GoogleFonts.inter(
-                              color: AppColors.textSecondary, fontSize: 13)),
-                      style: OutlinedButton.styleFrom(
-                        side: BorderSide(
-                            color: AppColors.textDim.withValues(alpha: 0.4)),
-                      ),
-                      onPressed: () async {
-                        Navigator.of(ctx).pop();
-                        final snack = ScaffoldMessenger.of(context);
-                        snack.showSnackBar(const SnackBar(
-                          content: Text('Creando gara di test...'),
-                          duration: Duration(seconds: 10),
-                        ));
-                        try {
-                          await AdminService().seedGaraTest();
-                          snack.hideCurrentSnackBar();
-                          snack.showSnackBar(const SnackBar(
-                            content: Text('✅ Gara test creata! Ricarica l\'app.'),
-                            backgroundColor: AppColors.rankUp,
-                          ));
-                          if (mounted) {
-                            context.read<GaraProvider>().ascoltaGaraAttiva();
-                          }
-                        } catch (e) {
-                          snack.hideCurrentSnackBar();
-                          snack.showSnackBar(SnackBar(
-                            content: Text('Errore: $e'),
-                            backgroundColor: AppColors.primary,
-                          ));
-                        }
-                      },
-                    ),
-                  ),
-
-                  const SizedBox(height: 8),
-
-                  // Logout
-                  SizedBox(
-                    width: double.infinity,
-                    child: TextButton(
-                      onPressed: () async {
-                        Navigator.of(ctx).pop();
-                        await auth.signOut();
-                        if (!mounted) return;
-                        Navigator.of(context).pushAndRemoveUntil(
-                          MaterialPageRoute(
-                              builder: (_) => const LoginScreen()),
-                          (route) => false,
-                        );
-                      },
-                      child: Text(
-                        'ESCI',
-                        style: GoogleFonts.oswald(
-                          color: AppColors.primary,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 2,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const ImpostazioniScreen()),
     );
+  }
+
+  Future<void> _seedGara() async {
+    final snack = ScaffoldMessenger.of(context);
+    snack.showSnackBar(const SnackBar(
+      content: Text('Creando gara di test...'),
+      duration: Duration(seconds: 10),
+    ));
+    try {
+      await AdminService().seedGaraTest();
+      snack.hideCurrentSnackBar();
+      snack.showSnackBar(const SnackBar(
+        content: Text('✅ Gara test creata!'),
+        backgroundColor: AppColors.rankUp,
+      ));
+      if (mounted) {
+        context.read<GaraProvider>().ascoltaGaraAttiva();
+      }
+    } catch (e) {
+      snack.hideCurrentSnackBar();
+      snack.showSnackBar(SnackBar(
+        content: Text('Errore: $e'),
+        backgroundColor: AppColors.primary,
+      ));
+    }
   }
 
   @override
@@ -230,15 +98,30 @@ class _HomeScreenState extends State<HomeScreen> {
           ? _buildHome(context, gara, voti, auth)
           : _navIndex == 1
               ? _buildGare(context)
-              : _navIndex == 3
-                  ? _buildProfilo(context, auth)
-                  : const SizedBox.shrink(),
-      bottomNavigationBar: _buildNavBar(),
+              : _navIndex == 2
+                  ? _buildHallOfFame(context)
+                  : _navIndex == 3
+                      ? _buildProfilo(context, auth)
+                      : const SizedBox.shrink(),
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const MiniPlayer(),
+          _buildNavBar(),
+        ],
+      ),
     );
   }
 
   Widget _buildHome(context, gara, voti, auth) {
-    return CustomScrollView(
+    return RefreshIndicator(
+      color: AppColors.primary,
+      onRefresh: () async {
+        context.read<GaraProvider>().ascoltaGaraAttiva();
+        final uid = context.read<AuthProvider>().user?.uid;
+        if (uid != null) context.read<VotiProvider>().ascoltaStato(uid);
+      },
+      child: CustomScrollView(
       slivers: [
         // App bar con logo e voti rimasti
         SliverAppBar(
@@ -264,8 +147,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   MaterialPageRoute(builder: (_) => const AcquistoVotiScreen()),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 4),
             ],
+            IconButton(
+              icon: const Icon(Icons.search, color: Colors.white),
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const RicercaScreen()),
+              ),
+            ),
             if (auth.isArtista)
               IconButton(
                 icon: const Icon(Icons.dashboard_outlined, color: Colors.white),
@@ -414,6 +303,7 @@ class _HomeScreenState extends State<HomeScreen> {
           const SliverToBoxAdapter(child: SizedBox(height: 80)),
         ],
       ],
+      ),
     );
   }
 
@@ -451,74 +341,164 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildGare(BuildContext context) {
     final gara = context.watch<GaraProvider>();
-    if (gara.garaAttiva == null) {
-      return const Center(
-        child: Text('Nessuna gara attiva',
-            style: TextStyle(color: AppColors.textSecondary)),
-      );
-    }
-    return Center(
-      child: ElevatedButton(
-        onPressed: () => Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) =>
-                DettaglioGaraScreen(garaId: gara.garaAttiva!.id),
+    return ListView(
+      padding: const EdgeInsets.all(24),
+      children: [
+        if (gara.garaAttiva != null)
+          ElevatedButton.icon(
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) =>
+                    DettaglioGaraScreen(garaId: gara.garaAttiva!.id),
+              ),
+            ),
+            icon: const Icon(Icons.emoji_events_outlined),
+            label: Text('Gara di ${gara.garaAttiva!.tema} →'),
+          )
+        else
+          Text(
+            'Nessuna gara attiva',
+            style: GoogleFonts.inter(color: AppColors.textSecondary),
+          ),
+        const SizedBox(height: 16),
+        OutlinedButton.icon(
+          onPressed: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const HallOfFameScreen()),
+          ),
+          icon: const Icon(Icons.workspace_premium_outlined,
+              color: AppColors.gold),
+          label: Text('Hall of Fame',
+              style: GoogleFonts.inter(color: AppColors.gold)),
+          style: OutlinedButton.styleFrom(
+            side: const BorderSide(color: AppColors.gold),
           ),
         ),
-        child: const Text('Vedi gara attiva'),
-      ),
+        const SizedBox(height: 16),
+        OutlinedButton.icon(
+          icon: const Icon(Icons.science_outlined,
+              color: AppColors.textSecondary, size: 16),
+          label: Text('Seed Gara Test',
+              style: GoogleFonts.inter(
+                  color: AppColors.textSecondary, fontSize: 13)),
+          style: OutlinedButton.styleFrom(
+            side: BorderSide(
+                color: AppColors.textDim.withValues(alpha: 0.4)),
+          ),
+          onPressed: _seedGara,
+        ),
+      ],
     );
   }
 
+  Widget _buildHallOfFame(BuildContext context) {
+    return const HallOfFameScreen();
+  }
+
   Widget _buildProfilo(BuildContext context, AuthProvider auth) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.person_outline,
-              size: 64, color: AppColors.textSecondary),
-          const SizedBox(height: 16),
-          Text(auth.user?.displayName ?? 'Profilo',
-              style: AppTextStyles.headline3(context)),
-          const SizedBox(height: 24),
-          if (auth.isArtista)
+    if (!auth.isAuthenticated) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.person_outline,
+                size: 64, color: AppColors.textSecondary),
+            const SizedBox(height: 16),
+            Text('Accedi a RISE',
+                style: AppTextStyles.headline3(context)),
+            const SizedBox(height: 24),
             ElevatedButton(
               onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                    builder: (_) => const DashboardArtistaScreen()),
-              ),
-              child: const Text('Dashboard Artista'),
-            ),
-          const SizedBox(height: 12),
-          TextButton(
-            onPressed: () async {
-              await auth.signOut();
-              if (!mounted) return;
-              Navigator.of(context).pushAndRemoveUntil(
                 MaterialPageRoute(builder: (_) => const LoginScreen()),
-                (route) => false,
-              );
-            },
-            child: const Text('Esci',
-                style: TextStyle(color: AppColors.primary)),
+              ),
+              child: const Text('ACCEDI'),
+            ),
+          ],
+        ),
+      );
+    }
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        const SizedBox(height: 16),
+        // Avatar + nome
+        Center(
+          child: Column(
+            children: [
+              CircleAvatar(
+                radius: 40,
+                backgroundColor: AppColors.primary.withValues(alpha: 0.2),
+                child: Text(
+                  (auth.user?.displayName ?? auth.user?.email ?? '?')
+                      .substring(0, 1)
+                      .toUpperCase(),
+                  style: AppTextStyles.headline2(context)
+                      .copyWith(color: AppColors.primary),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                auth.user?.displayName ?? 'Utente',
+                style: AppTextStyles.headline3(context),
+              ),
+              if (auth.user?.email != null)
+                Text(auth.user!.email!,
+                    style: AppTextStyles.bodyMedium(context)),
+            ],
           ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 24),
+        // Actions
+        if (auth.isArtista)
+          _ProfiloTile(
+            icon: Icons.dashboard_outlined,
+            label: 'Dashboard Artista',
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                  builder: (_) => const DashboardArtistaScreen()),
+            ),
+          ),
+        _ProfiloTile(
+          icon: Icons.bar_chart_outlined,
+          label: 'Classifica',
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const ClassificaScreen()),
+          ),
+        ),
+        _ProfiloTile(
+          icon: Icons.card_giftcard_outlined,
+          label: 'Invita amici',
+          subtitle: 'Ottieni voti bonus',
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(
+                builder: (_) => const ReferralScreen()),
+          ),
+        ),
+        _ProfiloTile(
+          icon: Icons.settings_outlined,
+          label: 'Impostazioni',
+          onTap: _showSettings,
+        ),
+        const SizedBox(height: 24),
+        TextButton(
+          onPressed: () async {
+            await auth.signOut();
+            if (!mounted) return;
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (_) => const LoginScreen()),
+              (route) => false,
+            );
+          },
+          child: const Text('ESCI',
+              style: TextStyle(color: AppColors.primary)),
+        ),
+      ],
     );
   }
 
   BottomNavigationBar _buildNavBar() {
     return BottomNavigationBar(
       currentIndex: _navIndex,
-      onTap: (i) {
-        if (i == 2) {
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const ClassificaScreen()),
-          );
-          return;
-        }
-        setState(() => _navIndex = i);
-      },
+      onTap: (i) => setState(() => _navIndex = i),
       items: const [
         BottomNavigationBarItem(
           icon: Icon(Icons.home_outlined),
@@ -531,9 +511,9 @@ class _HomeScreenState extends State<HomeScreen> {
           label: 'Gare',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.bar_chart_outlined),
-          activeIcon: Icon(Icons.bar_chart),
-          label: 'Classifica',
+          icon: Icon(Icons.workspace_premium_outlined),
+          activeIcon: Icon(Icons.workspace_premium),
+          label: 'Hall of Fame',
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.person_outline),
@@ -685,3 +665,41 @@ class _NoGaraPlaceholder extends StatelessWidget {
     );
   }
 }
+
+class _ProfiloTile extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String? subtitle;
+  final VoidCallback? onTap;
+
+  const _ProfiloTile({
+    required this.icon,
+    required this.label,
+    this.subtitle,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      color: AppColors.cardDark,
+      margin: const EdgeInsets.only(bottom: 8),
+      child: ListTile(
+        leading: Icon(icon, color: AppColors.textSecondary),
+        title: Text(
+          label,
+          style: GoogleFonts.inter(color: Colors.white, fontSize: 15),
+        ),
+        subtitle: subtitle != null
+            ? Text(subtitle!,
+                style: GoogleFonts.inter(
+                    color: AppColors.textDim, fontSize: 12))
+            : null,
+        trailing:
+            const Icon(Icons.chevron_right, color: AppColors.textDim),
+        onTap: onTap,
+      ),
+    );
+  }
+}
+

@@ -9,7 +9,8 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(sed -n '178,190p' C:/Users/marco/rise/lib/screens/classifica/classifica_screen.dart)",
-      "Bash(sed -n '209,220p' C:/Users/marco/rise/lib/screens/gare/dettaglio_gara_screen.dart)"
+      "Bash(sed -n '209,220p' C:/Users/marco/rise/lib/screens/gare/dettaglio_gara_screen.dart)",
+      "Bash(dart pub:*)"
     ]
   }
 }

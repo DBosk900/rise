@@ -8,6 +8,7 @@ import 'providers/auth_provider.dart';
 import 'providers/gara_provider.dart';
 import 'providers/voti_provider.dart';
 import 'providers/theme_provider.dart';
+import 'providers/player_provider.dart';
 import 'screens/splash/splash_screen.dart';
 import 'theme/app_theme.dart';
 
@@ -52,6 +53,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => GaraProvider()),
         ChangeNotifierProvider(create: (_) => VotiProvider()),
+        ChangeNotifierProvider(create: (_) => PlayerProvider()),
       ],
       child: const RiseApp(),
     ),
