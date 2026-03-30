@@ -12,6 +12,7 @@ class Brano {
   final String genere;
   final String faseAttuale;
   final int votiTotali;
+  final int votiSettimana;
   final int posizioneAttuale;
   final int posizionePrecedente;
   final bool eliminato;
@@ -29,6 +30,7 @@ class Brano {
     required this.genere,
     required this.faseAttuale,
     this.votiTotali = 0,
+    this.votiSettimana = 0,
     this.posizioneAttuale = 0,
     this.posizionePrecedente = 0,
     this.eliminato = false,
@@ -51,6 +53,7 @@ class Brano {
       genere: data['genere'] ?? '',
       faseAttuale: data['fase_attuale'] ?? 'gironi',
       votiTotali: data['voti_totali'] ?? 0,
+      votiSettimana: data['voti_settimana'] ?? 0,
       posizioneAttuale: data['posizione_attuale'] ?? 0,
       posizionePrecedente: data['posizione_precedente'] ?? 0,
       eliminato: data['eliminato'] ?? false,
@@ -70,6 +73,7 @@ class Brano {
         'genere': genere,
         'fase_attuale': faseAttuale,
         'voti_totali': votiTotali,
+        'voti_settimana': votiSettimana,
         'posizione_attuale': posizioneAttuale,
         'posizione_precedente': posizionePrecedente,
         'eliminato': eliminato,
@@ -78,6 +82,7 @@ class Brano {
 
   Brano copyWith({
     int? votiTotali,
+    int? votiSettimana,
     int? posizioneAttuale,
     int? posizionePrecedente,
     bool? eliminato,
@@ -95,6 +100,7 @@ class Brano {
         genere: genere,
         faseAttuale: faseAttuale ?? this.faseAttuale,
         votiTotali: votiTotali ?? this.votiTotali,
+        votiSettimana: votiSettimana ?? this.votiSettimana,
         posizioneAttuale: posizioneAttuale ?? this.posizioneAttuale,
         posizionePrecedente: posizionePrecedente ?? this.posizionePrecedente,
         eliminato: eliminato ?? this.eliminato,

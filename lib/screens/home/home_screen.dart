@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../providers/auth_provider.dart';
+import '../../services/admin_service.dart';
 import '../../providers/gara_provider.dart';
 import '../../models/gara.dart';
 import '../../providers/theme_provider.dart';
@@ -36,7 +37,7 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     debugPrint('HomeScreen: initState');
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<GaraProvider>().caricaGaraAttiva();
+      context.read<GaraProvider>().ascoltaGaraAttiva();
       final uid = context.read<AuthProvider>().user?.uid;
       if (uid != null) {
         context.read<VotiProvider>().ascoltaStato(uid);
@@ -139,6 +140,49 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
 
                   const SizedBox(height: 24),
+
+                  // DEV: Seed dati test
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      icon: const Icon(Icons.science_outlined,
+                          color: AppColors.textSecondary, size: 16),
+                      label: Text('Seed Gara Test',
+                          style: GoogleFonts.inter(
+                              color: AppColors.textSecondary, fontSize: 13)),
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(
+                            color: AppColors.textDim.withValues(alpha: 0.4)),
+                      ),
+                      onPressed: () async {
+                        Navigator.of(ctx).pop();
+                        final snack = ScaffoldMessenger.of(context);
+                        snack.showSnackBar(const SnackBar(
+                          content: Text('Creando gara di test...'),
+                          duration: Duration(seconds: 10),
+                        ));
+                        try {
+                          await AdminService().seedGaraTest();
+                          snack.hideCurrentSnackBar();
+                          snack.showSnackBar(const SnackBar(
+                            content: Text('✅ Gara test creata! Ricarica l\'app.'),
+                            backgroundColor: AppColors.rankUp,
+                          ));
+                          if (mounted) {
+                            context.read<GaraProvider>().ascoltaGaraAttiva();
+                          }
+                        } catch (e) {
+                          snack.hideCurrentSnackBar();
+                          snack.showSnackBar(SnackBar(
+                            content: Text('Errore: $e'),
+                            backgroundColor: AppColors.primary,
+                          ));
+                        }
+                      },
+                    ),
+                  ),
+
+                  const SizedBox(height: 8),
 
                   // Logout
                   SizedBox(

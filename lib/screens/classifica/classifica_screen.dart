@@ -32,7 +32,7 @@ class _ClassificaScreenState extends State<ClassificaScreen>
   }
 
   Future<void> _carica() async {
-    final gara = await _garaService.getGaraAttiva();
+    final gara = await _garaService.getGaraAttivaOnce();
     if (gara == null) {
       setState(() => _loading = false);
       return;

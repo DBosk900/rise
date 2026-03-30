@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import '../models/voto.dart';
 import '../services/voto_service.dart';
@@ -8,12 +9,20 @@ class VotiProvider extends ChangeNotifier {
   StatoVoti? _stato;
   bool _loading = false;
   String? _lastError;
-  int _votiConsecutivi = 0; // Per interstitial AdMob
+  int _votiConsecutivi = 0;
+
+  StreamSubscription<StatoVoti>? _statoSubscription;
 
   StatoVoti? get stato => _stato;
   bool get loading => _loading;
   String? get lastError => _lastError;
   int get votiConsecutivi => _votiConsecutivi;
+
+  @override
+  void dispose() {
+    _statoSubscription?.cancel();
+    super.dispose();
+  }
 
   Future<void> caricaStato(String userId) async {
     _loading = true;
@@ -26,11 +35,19 @@ class VotiProvider extends ChangeNotifier {
     }
   }
 
+  /// Avvia ascolto real-time dello stato voti. Cancella la subscription
+  /// precedente se esistente.
   void ascoltaStato(String userId) {
-    _service.statoVotiStream(userId).listen((stato) {
-      _stato = stato;
-      notifyListeners();
-    });
+    _statoSubscription?.cancel();
+    _statoSubscription = _service.statoVotiStream(userId).listen(
+      (stato) {
+        _stato = stato;
+        notifyListeners();
+      },
+      onError: (e) {
+        debugPrint('VotiProvider: stream error: $e');
+      },
+    );
   }
 
   Future<VotoResult> vota({
@@ -39,6 +56,7 @@ class VotiProvider extends ChangeNotifier {
     required String garaId,
   }) async {
     _lastError = null;
+
     final result = await _service.votaBrano(
       userId: userId,
       branoId: branoId,
@@ -47,8 +65,8 @@ class VotiProvider extends ChangeNotifier {
 
     if (result.success) {
       _votiConsecutivi++;
+      // Aggiornamento ottimistico locale in attesa del listener
       if (_stato != null) {
-        // Aggiorna localmente in attesa del listener
         final gratuiti = _stato!.votiGratuiRimasti;
         if (gratuiti > 0) {
           _stato = StatoVoti(
@@ -67,6 +85,7 @@ class VotiProvider extends ChangeNotifier {
     } else {
       _lastError = result.error;
     }
+
     notifyListeners();
     return result;
   }
@@ -75,5 +94,6 @@ class VotiProvider extends ChangeNotifier {
     _votiConsecutivi = 0;
   }
 
-  bool get deveMonstrareInterstitial => _votiConsecutivi > 0 && _votiConsecutivi % 3 == 0;
+  bool get deveMonstrareInterstitial =>
+      _votiConsecutivi > 0 && _votiConsecutivi % 3 == 0;
 }

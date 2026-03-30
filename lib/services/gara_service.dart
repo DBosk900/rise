@@ -7,7 +7,8 @@ class GaraService {
 
   // ── Gare ──────────────────────────────────────────────────────────────
 
-  Stream<Gara?> garaAttivaStream() {
+  /// Stream della gara attiva (stato != chiusa)
+  Stream<Gara?> getGaraAttiva() {
     return _db
         .collection('gare')
         .where('stato', whereNotIn: ['chiusa'])
@@ -18,7 +19,10 @@ class GaraService {
             snap.docs.isEmpty ? null : Gara.fromFirestore(snap.docs.first));
   }
 
-  Future<Gara?> getGaraAttiva() async {
+  // Alias per compatibilità con codice esistente
+  Stream<Gara?> garaAttivaStream() => getGaraAttiva();
+
+  Future<Gara?> getGaraAttivaOnce() async {
     final snap = await _db
         .collection('gare')
         .where('stato', whereNotIn: ['chiusa'])
@@ -37,6 +41,15 @@ class GaraService {
     return snap.docs.map(Gara.fromFirestore).toList();
   }
 
+  // ── Montepremi ────────────────────────────────────────────────────────
+
+  Stream<double> getMontepremiAttuale(String garaId) {
+    return _db.collection('gare').doc(garaId).snapshots().map((doc) {
+      if (!doc.exists) return 0.0;
+      return (doc.data()?['montepremi_totale'] ?? 0.0).toDouble();
+    });
+  }
+
   // ── Brani ─────────────────────────────────────────────────────────────
 
   Stream<List<Brano>> braniPerGaraStream(String garaId, {String? genere}) {
@@ -50,6 +63,21 @@ class GaraService {
     }
 
     return query
+        .orderBy('voti_totali', descending: true)
+        .snapshots()
+        .map((s) => s.docs.map(Brano.fromFirestore).toList());
+  }
+
+  // Alias richiesto dalla spec
+  Stream<List<Brano>> getBraniPerGenere(String garaId, String? genere) =>
+      braniPerGaraStream(garaId, genere: genere);
+
+  /// Stream classifica generale ordinata per voti
+  Stream<List<Brano>> getClassificaGenerale(String garaId) {
+    return _db
+        .collection('brani_in_gara')
+        .where('gara_id', isEqualTo: garaId)
+        .where('eliminato', isEqualTo: false)
         .orderBy('voti_totali', descending: true)
         .snapshots()
         .map((s) => s.docs.map(Brano.fromFirestore).toList());
@@ -106,9 +134,9 @@ class GaraService {
     );
     await ref.set(brano.toFirestore());
 
-    // Incrementa numero iscritti nella gara
+    // Incrementa numero iscritti e montepremi nella gara
     await _db.collection('gare').doc(garaId).update({
-      'numero_iscritti': FieldValue.increment(1),
+      'n_iscritti': FieldValue.increment(1),
       'montepremi_totale': FieldValue.increment(2.0 * 0.70),
     });
 
@@ -127,5 +155,68 @@ class GaraService {
         .toList()
       ..sort();
     return generi;
+  }
+
+  // ── Crea nuova gara ───────────────────────────────────────────────────
+
+  static const _temiPredefiniti = [
+    'Libertà',
+    'Notte',
+    'Rinascita',
+    'Viaggio',
+    'Amore',
+    'Città',
+    'Sogni',
+    'Confini',
+    'Fuoco',
+    'Radici',
+  ];
+
+  Future<String> creaGaraMese({
+    String? tema,
+    String? temaDescrizione,
+  }) async {
+    final now = DateTime.now();
+
+    // Controlla se esiste già una gara per questo mese
+    final esistente = await _db
+        .collection('gare')
+        .where('mese', isEqualTo: now.month)
+        .where('anno', isEqualTo: now.year)
+        .limit(1)
+        .get();
+
+    if (esistente.docs.isNotEmpty) {
+      throw Exception('Esiste già una gara per ${now.month}/${now.year}');
+    }
+
+    // Tema: parametro > tema casuale dalla lista predefinita
+    final temaFinale = tema ??
+        _temiPredefiniti[now.month % _temiPredefiniti.length];
+
+    final inizioIscrizioni = DateTime(now.year, now.month, 1);
+    final fineIscrizioni = DateTime(now.year, now.month, 7, 23, 59);
+    final inizioGironi = DateTime(now.year, now.month, 8);
+    final fineMese = DateTime(now.year, now.month + 1, 0, 23, 59); // ultimo giorno
+
+    final ref = _db.collection('gare').doc();
+    final gara = Gara(
+      id: ref.id,
+      mese: now.month,
+      anno: now.year,
+      tema: temaFinale,
+      temaDescrizione: temaDescrizione ?? 'Gara mensile RISE — $temaFinale',
+      stato: StatoGara.iscrizioni,
+      montepremitotale: 0,
+      numeroIscritti: 0,
+      dataInizio: inizioIscrizioni,
+      dataFine: fineMese,
+      dataInizioIscrizioni: inizioIscrizioni,
+      dataFineIscrizioni: fineIscrizioni,
+      dataInizioGironi: inizioGironi,
+    );
+
+    await ref.set(gara.toFirestore());
+    return ref.id;
   }
 }

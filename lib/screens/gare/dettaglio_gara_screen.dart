@@ -225,12 +225,22 @@ class _BraniList extends StatelessWidget {
                         branoId: brani[i].id,
                         garaId: garaId,
                       );
-                      if (!result.success && ctx.mounted) {
-                        ScaffoldMessenger.of(ctx).showSnackBar(
-                          SnackBar(
+                      if (ctx.mounted) {
+                        if (result.success) {
+                          ScaffoldMessenger.of(ctx).showSnackBar(
+                            const SnackBar(
+                              content: Text('✅ Voto registrato!'),
+                              backgroundColor: AppColors.rankUp,
+                            ),
+                          );
+                        } else {
+                          ScaffoldMessenger.of(ctx).showSnackBar(
+                            SnackBar(
                               content: Text(result.error ?? 'Errore'),
-                              backgroundColor: AppColors.primary),
-                        );
+                              backgroundColor: AppColors.primary,
+                            ),
+                          );
+                        }
                       }
                     },
             ).animate().fadeIn(
