@@ -24,10 +24,15 @@ class _AcquistoVotiScreenState extends State<AcquistoVotiScreen> {
 
     setState(() => _acquistando = true);
     await _pagamento.initialize();
-    final ok = await _pagamento.acquistaVotiExtra5();
+    final (ok, errore) = await _pagamento.acquistaVotiExtra5();
 
     if (mounted) {
       setState(() => _acquistando = false);
+      if (!ok && errore != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errore), backgroundColor: AppColors.primary),
+        );
+      }
       if (ok) {
         // Aggiorna Firestore
         final voti = context.read<VotiProvider>();

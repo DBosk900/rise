@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
-import '../../services/admin_service.dart';
 import '../../providers/gara_provider.dart';
 import '../../models/gara.dart';
 import '../../providers/voti_provider.dart';
@@ -61,30 +60,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Future<void> _seedGara() async {
-    final snack = ScaffoldMessenger.of(context);
-    snack.showSnackBar(const SnackBar(
-      content: Text('Creando gara di test...'),
-      duration: Duration(seconds: 10),
-    ));
-    try {
-      await AdminService().seedGaraTest();
-      snack.hideCurrentSnackBar();
-      snack.showSnackBar(const SnackBar(
-        content: Text('✅ Gara test creata!'),
-        backgroundColor: AppColors.rankUp,
-      ));
-      if (mounted) {
-        context.read<GaraProvider>().ascoltaGaraAttiva();
-      }
-    } catch (e) {
-      snack.hideCurrentSnackBar();
-      snack.showSnackBar(SnackBar(
-        content: Text('Errore: $e'),
-        backgroundColor: AppColors.primary,
-      ));
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -98,11 +73,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ? _buildHome(context, gara, voti, auth)
           : _navIndex == 1
               ? _buildGare(context)
-              : _navIndex == 2
-                  ? _buildHallOfFame(context)
-                  : _navIndex == 3
-                      ? _buildProfilo(context, auth)
-                      : const SizedBox.shrink(),
+              : _buildProfilo(context, auth), // indice 2 o 3
       bottomNavigationBar: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -373,25 +344,8 @@ class _HomeScreenState extends State<HomeScreen> {
             side: const BorderSide(color: AppColors.gold),
           ),
         ),
-        const SizedBox(height: 16),
-        OutlinedButton.icon(
-          icon: const Icon(Icons.science_outlined,
-              color: AppColors.textSecondary, size: 16),
-          label: Text('Seed Gara Test',
-              style: GoogleFonts.inter(
-                  color: AppColors.textSecondary, fontSize: 13)),
-          style: OutlinedButton.styleFrom(
-            side: BorderSide(
-                color: AppColors.textDim.withValues(alpha: 0.4)),
-          ),
-          onPressed: _seedGara,
-        ),
       ],
     );
-  }
-
-  Widget _buildHallOfFame(BuildContext context) {
-    return const HallOfFameScreen();
   }
 
   Widget _buildProfilo(BuildContext context, AuthProvider auth) {
@@ -496,9 +450,21 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   BottomNavigationBar _buildNavBar() {
+    // _navIndex: 0=Home 1=Gare 2=HallOfFame(push) 3=Profilo
+    // Hall of Fame si apre come route separata (evita nested Scaffold)
+    final displayIndex = _navIndex == 3 ? 3 : _navIndex;
     return BottomNavigationBar(
-      currentIndex: _navIndex,
-      onTap: (i) => setState(() => _navIndex = i),
+      currentIndex: displayIndex,
+      onTap: (i) {
+        if (i == 2) {
+          // Hall of Fame → push route separata, non cambia _navIndex
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const HallOfFameScreen()),
+          );
+          return;
+        }
+        setState(() => _navIndex = i);
+      },
       items: const [
         BottomNavigationBarItem(
           icon: Icon(Icons.home_outlined),

@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -29,48 +30,75 @@ class _ReferralScreenState extends State<ReferralScreen> {
   Future<void> _carica() async {
     final uid = context.read<AuthProvider>().user?.uid;
     if (uid == null) {
-      setState(() => _loading = false);
+      setState(() {
+        _codice = _generateCode(uid ?? 'GUEST');
+        _loading = false;
+      });
       return;
     }
 
-    final doc = await FirebaseFirestore.instance
-        .collection('utenti')
-        .doc(uid)
-        .get();
-
-    if (!doc.exists) {
-      setState(() => _loading = false);
-      return;
-    }
-
-    final data = doc.data()!;
-    String? codice = data['referral_code'] as String?;
-
-    if (codice == null || codice.isEmpty) {
-      codice = _generateCode(uid);
-      await FirebaseFirestore.instance
+    try {
+      // Timeout di 5 secondi per Firestore
+      final doc = await FirebaseFirestore.instance
           .collection('utenti')
           .doc(uid)
-          .update({'referral_code': codice});
+          .get()
+          .timeout(const Duration(seconds: 5));
+
+      String? codice = doc.exists
+          ? (doc.data()?['referral_code'] as String?)
+          : null;
+
+      // Genera codice locale se mancante
+      if (codice == null || codice.isEmpty) {
+        codice = _generateCode(uid);
+        // Salva in background, senza bloccare UI
+        FirebaseFirestore.instance
+            .collection('utenti')
+            .doc(uid)
+            .set({'referral_code': codice}, SetOptions(merge: true))
+            .catchError((_) {});
+      }
+
+      // Conta invitati (con timeout, non bloccante)
+      int count = 0;
+      try {
+        final snap = await FirebaseFirestore.instance
+            .collection('utenti')
+            .where('referral_da', isEqualTo: codice)
+            .count()
+            .get()
+            .timeout(const Duration(seconds: 5));
+        count = snap.count ?? 0;
+      } catch (_) {}
+
+      if (mounted) {
+        setState(() {
+          _codice = codice;
+          _amiciInvitati = count;
+          _loading = false;
+        });
+      }
+    } catch (_) {
+      // Qualsiasi errore/timeout → usa codice locale
+      if (mounted) {
+        setState(() {
+          _codice = _generateCode(uid);
+          _amiciInvitati = 0;
+          _loading = false;
+        });
+      }
     }
-
-    final count = await FirebaseFirestore.instance
-        .collection('utenti')
-        .where('referral_da', isEqualTo: codice)
-        .count()
-        .get();
-
-    setState(() {
-      _codice = codice;
-      _amiciInvitati = count.count ?? 0;
-      _loading = false;
-    });
   }
 
+  /// Genera codice da uid — formato RISE-XXXXXX
   String _generateCode(String uid) {
-    // Genera codice da uid (prime 6 cifre uppercase)
-    final base = uid.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '').toUpperCase();
-    return base.length >= 6 ? 'RISE${base.substring(0, 6)}' : 'RISE$base';
+    final clean = uid.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '').toUpperCase();
+    final base = clean.length >= 6 ? clean.substring(0, 6) : clean;
+    if (base.length >= 4) return 'RISE-$base';
+    // Fallback con numero casuale se uid è troppo corto
+    final rnd = Random().nextInt(9999).toString().padLeft(4, '0');
+    return 'RISE-$rnd';
   }
 
   void _condividi() {
@@ -78,7 +106,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
     Share.share(
       'Unisciti a RISE — la piattaforma competitiva per artisti indipendenti! '
       'Usa il mio codice $_codice per ottenere 3 voti bonus al primo accesso. '
-      'Scarica l\'app: https://rise-app.it',
+      'Scarica l\'app: https://apps.apple.com/app/id6761341266',
     );
   }
 
@@ -184,7 +212,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
                         _codice ?? '—',
                         style: GoogleFonts.robotoMono(
                           color: AppColors.primary,
-                          fontSize: 24,
+                          fontSize: 22,
                           fontWeight: FontWeight.w700,
                           letterSpacing: 4,
                         ),

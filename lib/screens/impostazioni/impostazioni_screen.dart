@@ -9,6 +9,7 @@ import '../../theme/app_theme.dart';
 import '../auth/login_screen.dart';
 import '../artista/dashboard_artista_screen.dart';
 import '../referral/referral_screen.dart';
+import '../info/come_funziona_screen.dart';
 
 class ImpostazioniScreen extends StatefulWidget {
   const ImpostazioniScreen({super.key});
@@ -152,9 +153,9 @@ class _ImpostazioniScreenState extends State<ImpostazioniScreen> {
               label: 'Notifiche voti',
               subtitle: 'Quando ricevi nuovi voti',
               value: _notifVoti,
-              onChanged: (val) async {
-                await _notificaService.setVotiEnabled(val);
+              onChanged: (val) {
                 setState(() => _notifVoti = val);
+                _notificaService.setVotiEnabled(val);
               },
             ),
             _SwitchTile(
@@ -162,9 +163,9 @@ class _ImpostazioniScreenState extends State<ImpostazioniScreen> {
               label: 'Notifiche gare',
               subtitle: 'Inizio e fine gara mensile',
               value: _notifGara,
-              onChanged: (val) async {
-                await _notificaService.setGaraEnabled(val);
+              onChanged: (val) {
                 setState(() => _notifGara = val);
+                _notificaService.setGaraEnabled(val);
               },
             ),
             _SwitchTile(
@@ -172,9 +173,9 @@ class _ImpostazioniScreenState extends State<ImpostazioniScreen> {
               label: 'Aggiornamenti classifica',
               subtitle: 'Variazioni di posizione',
               value: _notifClassifica,
-              onChanged: (val) async {
-                await _notificaService.setClassificaEnabled(val);
+              onChanged: (val) {
                 setState(() => _notifClassifica = val);
+                _notificaService.setClassificaEnabled(val);
               },
             ),
           ],
@@ -185,22 +186,33 @@ class _ImpostazioniScreenState extends State<ImpostazioniScreen> {
           _Tile(
             icon: Icons.help_outline,
             label: 'Come funziona RISE',
-            onTap: () => _launchUrl('https://rise-app.it/come-funziona'),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                  builder: (_) => const ComeFunzionaScreen()),
+            ),
           ),
           _Tile(
-            icon: Icons.mail_outline,
-            label: 'Contattaci',
-            onTap: () => _launchUrl('mailto:support@rise-app.it'),
+            icon: Icons.feedback_outlined,
+            label: 'Feedback e segnalazioni',
+            onTap: () => _launchUrl('mailto:support@rise.app'),
+          ),
+          _Tile(
+            icon: Icons.star_outline,
+            label: 'Valuta l\'app',
+            onTap: () => _launchUrl(
+                'https://apps.apple.com/app/id6761341266'),
           ),
           _Tile(
             icon: Icons.privacy_tip_outlined,
             label: 'Privacy Policy',
-            onTap: () => _launchUrl('https://rise-app.it/privacy'),
+            onTap: () => _launchUrl(
+                'https://dbosk900.github.io/rise-landing/legal.html'),
           ),
           _Tile(
             icon: Icons.description_outlined,
             label: 'Termini di servizio',
-            onTap: () => _launchUrl('https://rise-app.it/terms'),
+            onTap: () => _launchUrl(
+                'https://dbosk900.github.io/rise-landing/legal.html'),
           ),
           const _Divider(),
 

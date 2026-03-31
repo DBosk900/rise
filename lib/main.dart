@@ -11,6 +11,7 @@ import 'providers/theme_provider.dart';
 import 'providers/player_provider.dart';
 import 'screens/splash/splash_screen.dart';
 import 'services/notifica_service.dart';
+import 'services/pagamento_service.dart';
 import 'theme/app_theme.dart';
 
 void main() async {
@@ -41,6 +42,14 @@ void main() async {
     debugPrint('RISE: AdMob ready');
   } catch (e) {
     debugPrint('RISE: AdMob error: $e');
+  }
+
+  // Inizializza RevenueCat
+  try {
+    await PagamentoService().initialize();
+    debugPrint('RISE: RevenueCat ready');
+  } catch (e) {
+    debugPrint('RISE: RevenueCat error: $e');
   }
 
   // Inizializza notifiche push
