@@ -3,7 +3,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../providers/auth_provider.dart';
-import '../../providers/theme_provider.dart';
 import '../../services/notifica_service.dart';
 import '../../theme/app_theme.dart';
 import '../auth/login_screen.dart';
@@ -82,7 +81,6 @@ class _ImpostazioniScreenState extends State<ImpostazioniScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
-    final theme = context.watch<ThemeProvider>();
 
     return Scaffold(
       backgroundColor: AppColors.backgroundDark,
@@ -128,16 +126,6 @@ class _ImpostazioniScreenState extends State<ImpostazioniScreen> {
             ),
             const _Divider(),
           ],
-
-          // ── PREFERENZE ──────────────────────────────────────────────────
-          _SectionHeader(title: 'PREFERENZE'),
-          _SwitchTile(
-            icon: Icons.dark_mode_outlined,
-            label: 'Tema scuro',
-            value: theme.isDark,
-            onChanged: (_) => theme.toggle(),
-          ),
-          const _Divider(),
 
           // ── NOTIFICHE ───────────────────────────────────────────────────
           _SectionHeader(title: 'NOTIFICHE'),

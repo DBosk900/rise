@@ -7,7 +7,6 @@ import 'firebase_options.dart';
 import 'providers/auth_provider.dart';
 import 'providers/gara_provider.dart';
 import 'providers/voti_provider.dart';
-import 'providers/theme_provider.dart';
 import 'providers/player_provider.dart';
 import 'screens/splash/splash_screen.dart';
 import 'services/notifica_service.dart';
@@ -67,7 +66,6 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => GaraProvider()),
         ChangeNotifierProvider(create: (_) => VotiProvider()),
@@ -84,13 +82,11 @@ class RiseApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     debugPrint('RISE: RiseApp.build');
-    final themeMode = context.watch<ThemeProvider>().mode;
     return MaterialApp(
       title: 'RISE',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: themeMode,
+      theme: AppTheme.darkTheme,
+      themeMode: ThemeMode.dark,
       home: const SplashScreen(),
     );
   }
